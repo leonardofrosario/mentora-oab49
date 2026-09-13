@@ -4,12 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#10243e">
-<title>Mentora OAB 49 — Gratuito</title>
+<title>Mentora OAB 49</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
-<header><div class="bar"><div class="brand">Mentora OAB 49<small>Preparação gratuita • 1ª fase 09/05/2027</small></div><nav id="nav"></nav><nav id="cloud-nav"><button id="nav-pesquisa" onclick="cloudShow('pesquisa',this)">Pesquisa IA</button><button id="nav-nuvem" onclick="cloudShow('nuvem',this)">Nuvem</button></nav></div></header>
+<header>
+  <div class="bar">
+    <div class="brand">Mentora OAB 49<small>Plano pessoal até a 1ª fase • 09/05/2027</small></div>
+    <div class="header-right">
+      <nav id="nav"></nav>
+      <div id="cloud-nav" class="row cloud-tools">
+        <button id="nav-pesquisa" onclick="cloudShow('pesquisa',this)">Pesquisa IA</button>
+        <span id="cloud-sync-status" class="pill">Preparando nuvem...</span>
+      </div>
+    </div>
+  </div>
+</header>
 <main class="wrap">
 <section id="p-hoje" class="page active"></section>
 <section id="p-estudar" class="page"></section>
@@ -21,8 +32,8 @@
 <section id="p-edital" class="page"></section>
 <section id="p-dados" class="page"></section>
 <section id="p-pesquisa" class="page"></section>
-<section id="p-nuvem" class="page"></section>
-<div class="footer">Conteúdo educacional autoral de apoio. Consulte legislação, jurisprudência e fontes oficiais atualizadas. Não é produto oficial da OAB ou FGV.</div>
+<section id="p-nuvem" class="page hide"></section>
+<div class="footer">Ferramenta educacional de apoio. Questões autorais. Consulte sempre legislação, jurisprudência e fontes oficiais atualizadas. Não é produto oficial da OAB ou FGV.</div>
 </main>
 <script src="data/questions-1.js"></script>
 <script src="data/questions-2.js"></script>
@@ -37,8 +48,9 @@
 <script src="app-3.js"></script>
 <script src="app-4.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="cloud-config.js?v=5"></script>
-<script src="cloud-core.js?v=5"></script>
-<script src="cloud-ai.js?v=5"></script>
+<script src="cloud-config.js?v=6"></script>
+<script src="cloud-core.js?v=6"></script>
+<script src="cloud-ai.js?v=6"></script>
+<script src="guest-mode.js?v=6"></script>
 </body>
 </html>
