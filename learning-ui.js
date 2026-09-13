@@ -43,8 +43,10 @@
 
   window.finishLearningAnswer=function(level){
     const a=quiz.lastAnswer,q=quiz.lastQuestion;if(a)a.confidence=level;
-    if(q&&level===2)reviewEntry(q,3,'dúvida');
-    if(q&&level===1)reviewEntry(q,1,'chute');
+    if(q&&a?.ok&&level===2)reviewEntry(q,3,'dúvida');
+    if(q&&a?.ok&&level===1)reviewEntry(q,1,'chute');
+    if(q&&!a?.ok&&level===2){const e=S.errors.find(x=>x.qid===q.id&&!x.mastered);if(e)e.type='erro + dúvida';}
+    if(q&&!a?.ok&&level===1){const e=S.errors.find(x=>x.qid===q.id&&!x.mastered);if(e)e.type='erro + chute';}
     save();nextQ();
   };
 
