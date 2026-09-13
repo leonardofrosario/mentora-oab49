@@ -1,5 +1,5 @@
-const CACHE='mentora-oab49-v5';
-const ASSETS=["./", "./index.html", "./styles.css", "./manifest.webmanifest", "./data/questions-1.js", "./data/questions-2.js", "./data/questions-3.js", "./data/questions-4.js", "./data/questions-5.js", "./data/questions-6.js", "./data/questions-7.js", "./data/questions-8.js", "./app-1.js", "./app-2.js", "./app-3.js", "./app-4.js", "./cloud-config.js", "./cloud-core.js", "./cloud-ai.js"];
+const CACHE='mentora-oab49-v6';
+const ASSETS=["./", "./index.html", "./styles.css", "./ui-v6.css", "./manifest.webmanifest", "./data/questions-1.js", "./data/questions-2.js", "./data/questions-3.js", "./data/questions-4.js", "./data/questions-5.js", "./data/questions-6.js", "./data/questions-7.js", "./data/questions-8.js", "./app-1.js", "./app-2.js", "./app-3.js", "./app-4.js", "./cloud-config.js", "./cloud-core.js", "./cloud-ai.js", "./guest-mode.js"];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
@@ -7,5 +7,5 @@ self.addEventListener('fetch',e=>{
     e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));return r}).catch(()=>caches.match('./index.html')));
     return;
   }
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+  e.respondWith(fetch(e.request).then(r=>{if(e.request.method==='GET'&&new URL(e.request.url).origin===location.origin){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}).catch(()=>caches.match(e.request)));
 });
