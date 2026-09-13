@@ -1,44 +1,157 @@
 (() => {
-  const cfg=window.MENTORA_CLOUD||{};
-  const MC=window.MentoraCloud={client:null,user:null,lastSync:0,syncing:false};
-  const h=s=>typeof esc==='function'?esc(s):String(s??'');
-  const uid=()=>crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`;
-  const msg=(id,t,cls='muted')=>{const e=document.getElementById(id);if(e){e.textContent=t;e.className=cls}};
-
-  function installUI(){
-    const main=document.querySelector('main.wrap'),footer=main?.querySelector('.footer'),nav=document.getElementById('nav');
-    if(main&&!document.getElementById('p-nuvem')){for(const id of ['pesquisa','nuvem']){const s=document.createElement('section');s.id='p-'+id;s.className='page';main.insertBefore(s,footer)}}
-    if(nav&&!document.getElementById('nav-pesquisa')) nav.insertAdjacentHTML('beforeend','<button id="nav-pesquisa" onclick="cloudShow(\'pesquisa\',this)">Pesquisa IA</button><button id="nav-nuvem" onclick="cloudShow(\'nuvem\',this)">Nuvem</button>');
-  }
-  window.cloudShow=(id,b)=>{document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('p-'+id)?.classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b?.classList.add('active');id==='nuvem'?MC.renderCloud():window.renderLegalSearch?.()};
-
-  MC.renderCloud=()=>{
-    const p=document.getElementById('p-nuvem');if(!p)return;
-    if(!MC.client){p.innerHTML='<div class="card"><h1>Nuvem</h1><p>Conexão ainda não carregou. Atualize a página com internet.</p></div>';return}
-    if(!MC.user){p.innerHTML=`<div class="card"><span class="pill">Supabase Free</span><h1>Sincronização na nuvem</h1><p>Crie uma conta para usar o mesmo desempenho no celular e no computador. O modo local continua funcionando sem login.</p></div><div class="grid2" style="margin-top:16px"><div class="card"><h2>Entrar</h2><label>E-mail</label><input id="cloud-email" type="email"><label>Senha</label><input id="cloud-pass" type="password"><div class="row" style="margin-top:12px"><button class="btn" onclick="cloudLogin()">Entrar</button><button class="btn secondary" onclick="cloudSignup()">Criar conta</button></div><p id="cloud-auth-msg" class="muted"></p></div><div class="card"><h2>Privacidade</h2><p>Perfil e desempenho são armazenados no Supabase. A chave Gemini fica somente no backend e não é enviada ao navegador.</p></div></div>`;return}
-    p.innerHTML=`<div class="card"><div class="row" style="justify-content:space-between"><div><span class="pill good">Conectado</span><h1 style="margin-top:10px">Nuvem ativa</h1><p class="muted">${h(MC.user.email||'usuário')}</p></div><button class="btn secondary" onclick="cloudLogout()">Sair</button></div><div class="kpis"><div class="kpi"><span>Questões respondidas</span><b>${S.answers.length}</b></div><div class="kpi"><span>Simulados</span><b>${S.sims.length}</b></div><div class="kpi"><span>Acerto geral</span><b>${acc()}%</b></div><div class="kpi"><span>Última sincronização</span><b style="font-size:14px">${MC.lastSync?new Date(MC.lastSync).toLocaleString('pt-BR'):'—'}</b></div></div><div class="row" style="margin-top:14px"><button class="btn" onclick="cloudSyncNow(true)">Sincronizar agora</button><button class="btn secondary" onclick="cloudLoadQuestions(true)">Atualizar questões</button></div><p id="cloud-sync-msg" class="muted"></p></div>`;
+  const cfg = window.MENTORA_CLOUD || {};
+  const MC = window.MentoraCloud = {
+    deviceId: null,
+    deviceSecret: null,
+    ready: false,
+    syncing: false,
+    lastSync: 0,
+    lastError: null
   };
 
-  window.cloudLogin=async()=>{const email=document.getElementById('cloud-email').value.trim(),password=document.getElementById('cloud-pass').value;msg('cloud-auth-msg','Entrando...');const {error}=await MC.client.auth.signInWithPassword({email,password});error?msg('cloud-auth-msg',error.message,'pill bad'):msg('cloud-auth-msg','Login realizado.','pill good')};
-  window.cloudSignup=async()=>{const email=document.getElementById('cloud-email').value.trim(),password=document.getElementById('cloud-pass').value;if(password.length<6)return msg('cloud-auth-msg','Use senha com ao menos 6 caracteres.','pill bad');msg('cloud-auth-msg','Criando conta...');const {data,error}=await MC.client.auth.signUp({email,password,options:{data:{display_name:S.profile.name||''},emailRedirectTo:cfg.appUrl}});if(error)return msg('cloud-auth-msg',error.message,'pill bad');data.session?msg('cloud-auth-msg','Conta criada e conectada.','pill good'):msg('cloud-auth-msg','Conta criada. Confirme o e-mail e depois entre.','pill good')};
-  window.cloudLogout=async()=>{await MC.client.auth.signOut();MC.user=null;MC.renderCloud()};
+  const DEVICE_ID_KEY = 'mentora_oab49_device_id_v1';
+  const DEVICE_SECRET_KEY = 'mentora_oab49_device_secret_v1';
 
-  function cid(o){return o._cid||(o._cid=uid())}
-  async function push(){
-    await MC.client.from('profiles').upsert({id:MC.user.id,display_name:S.profile.name||null,exam_date:'2027-05-09',daily_minutes:+S.profile.minutes||90,study_days:+S.profile.days||5,initial_level:S.profile.level||null,difficult_subjects:S.profile.hard||[],updated_at:new Date().toISOString()},{onConflict:'id'}).then(r=>{if(r.error)throw r.error});
-    const a=S.answers.filter(x=>!x._cloud);if(a.length){const rows=a.map(x=>({user_id:MC.user.id,client_event_id:cid(x),legacy_question_id:typeof x.qid==='number'?x.qid:null,discipline:x.disc||'Não informada',topic:x.topic||null,selected_index:Number.isInteger(x.chosen)?x.chosen:null,is_correct:!!x.ok,error_type:x.ok?null:'erro',mode:x.mode||'study',answered_at:new Date(x.at||Date.now()).toISOString()}));const r=await MC.client.from('attempts').upsert(rows,{onConflict:'user_id,client_event_id',ignoreDuplicates:true});if(r.error)throw r.error;a.forEach(x=>x._cloud=true)}
-    const ss=S.sessions.filter(x=>!x._cloud);if(ss.length){const rows=ss.map(x=>({user_id:MC.user.id,client_event_id:cid(x),mode:x.mode||'study',actual_minutes:x.minutes||null,total_questions:x.total||0,correct_questions:x.ok||0,ended_at:new Date(x.at||Date.now()).toISOString()}));const r=await MC.client.from('study_sessions').upsert(rows,{onConflict:'user_id,client_event_id',ignoreDuplicates:true});if(r.error)throw r.error;ss.forEach(x=>x._cloud=true)}
-    const sm=S.sims.filter(x=>!x._cloud);if(sm.length){const rows=sm.map(x=>({user_id:MC.user.id,client_event_id:cid(x),size:x.total||0,correct_count:x.ok||0,duration_seconds:(x.minutes||0)*60,completed_at:new Date(x.at||Date.now()).toISOString()}));const r=await MC.client.from('simulations').upsert(rows,{onConflict:'user_id,client_event_id',ignoreDuplicates:true});if(r.error)throw r.error;sm.forEach(x=>x._cloud=true)}
+  function uuid(){
+    return crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16)});
   }
-  async function pull(){
-    const [aa,ss,sm]=await Promise.all([MC.client.from('attempts').select('*').order('answered_at',{ascending:true}).limit(2000),MC.client.from('study_sessions').select('*').order('ended_at',{ascending:true}).limit(1000),MC.client.from('simulations').select('*').order('completed_at',{ascending:true}).limit(500)]);for(const r of [aa,ss,sm])if(r.error)throw r.error;
-    let c=new Set(S.answers.map(x=>x._cid).filter(Boolean));for(const x of aa.data||[])if(!c.has(x.client_event_id))S.answers.push({qid:x.legacy_question_id,disc:x.discipline,topic:x.topic,ok:x.is_correct,chosen:x.selected_index,at:+new Date(x.answered_at),mode:x.mode,_cid:x.client_event_id,_cloud:true});
-    c=new Set(S.sessions.map(x=>x._cid).filter(Boolean));for(const x of ss.data||[])if(!c.has(x.client_event_id))S.sessions.push({at:+new Date(x.ended_at),mode:x.mode,total:x.total_questions,ok:x.correct_questions,minutes:x.actual_minutes,_cid:x.client_event_id,_cloud:true});
-    c=new Set(S.sims.map(x=>x._cid).filter(Boolean));for(const x of sm.data||[])if(!c.has(x.client_event_id))S.sims.push({at:+new Date(x.completed_at),total:x.size,ok:x.correct_count,minutes:Math.round((x.duration_seconds||0)/60),_cid:x.client_event_id,_cloud:true});
+  function secret(){
+    const a = new Uint8Array(32); crypto.getRandomValues(a);
+    return Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('');
   }
-  window.cloudLoadQuestions=async(show=false)=>{if(!MC.user)return;const {data,error}=await MC.client.from('questions').select('id,legacy_id,prompt,options,correct_index,explanation,difficulty,source_url,disciplines(name),topics(name)').eq('active',true).order('legacy_id').limit(3000);if(error)return show&&msg('cloud-sync-msg',error.message,'pill bad');const ids=new Set(QUESTIONS.map(q=>q.id));for(const q of data||[]){if(q.legacy_id==null||ids.has(q.legacy_id))continue;QUESTIONS.push({id:q.legacy_id,disc:q.disciplines?.name||'Outros',topic:q.topics?.name||'Geral',q:q.prompt,opts:q.options,ans:q.correct_index,exp:q.explanation,diff:q.difficulty||'Médio',ref:q.source_url||'',_cloudId:q.id});ids.add(q.legacy_id)}if(show)msg('cloud-sync-msg',`Banco na nuvem: ${data?.length||0} questões.`,'pill good')};
-  window.cloudSyncNow=async(show=false)=>{if(!MC.user||MC.syncing)return;MC.syncing=true;if(show)msg('cloud-sync-msg','Sincronizando...');try{await MC.client.functions.invoke('seed-content',{body:{}});await push();await pull();await cloudLoadQuestions(false);localStorage.setItem(KEY,JSON.stringify(S));MC.lastSync=Date.now();if(show)msg('cloud-sync-msg','Sincronização concluída.','pill good')}catch(e){console.error(e);if(show)msg('cloud-sync-msg','Falha: '+(e.message||e),'pill bad')}finally{MC.syncing=false;if(document.getElementById('p-nuvem')?.classList.contains('active'))setTimeout(MC.renderCloud,200)}};
+  function status(text, kind=''){
+    const el=document.getElementById('cloud-sync-status'); if(!el)return;
+    el.textContent=text; el.className='pill'+(kind?' '+kind:'');
+  }
+  function getCreds(){
+    let id=localStorage.getItem(DEVICE_ID_KEY), sec=localStorage.getItem(DEVICE_SECRET_KEY);
+    if(!id){id=uuid(); localStorage.setItem(DEVICE_ID_KEY,id)}
+    if(!sec){sec=secret(); localStorage.setItem(DEVICE_SECRET_KEY,sec)}
+    MC.deviceId=id; MC.deviceSecret=sec;
+  }
 
-  async function init(){installUI();if(!window.supabase||!cfg.supabaseUrl||!cfg.supabaseKey)return;MC.client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});MC.user=(await MC.client.auth.getSession()).data.session?.user||null;MC.client.auth.onAuthStateChange((_e,s)=>{MC.user=s?.user||null;if(MC.user)setTimeout(()=>cloudSyncNow(false),250);if(document.getElementById('p-nuvem')?.classList.contains('active'))MC.renderCloud()});if(typeof window.save==='function'){const original=window.save;window.save=function(){original();if(MC.user){clearTimeout(MC._t);MC._t=setTimeout(()=>cloudSyncNow(false),5000)}}}if(MC.user)cloudSyncNow(false)}
-  window.addEventListener('load',init);
+  async function callApi(action, payload={}){
+    const r=await fetch(`${cfg.supabaseUrl}/functions/v1/device-api`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':cfg.supabaseKey,
+        'x-device-id':MC.deviceId,
+        'x-device-secret':MC.deviceSecret
+      },
+      body:JSON.stringify({action,...payload})
+    });
+    const data=await r.json().catch(()=>({error:'invalid_response'}));
+    if(!r.ok) throw new Error(data.message||data.error||`HTTP ${r.status}`);
+    return data;
+  }
+
+  MC.callFunction=async(name,body={})=>{
+    const r=await fetch(`${cfg.supabaseUrl}/functions/v1/${name}`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':cfg.supabaseKey,
+        'x-device-id':MC.deviceId,
+        'x-device-secret':MC.deviceSecret
+      },
+      body:JSON.stringify(body)
+    });
+    const data=await r.json().catch(()=>({error:'invalid_response'}));
+    if(!r.ok){const e=new Error(data.message||data.error||`HTTP ${r.status}`);e.data=data;e.status=r.status;throw e}
+    return data;
+  };
+
+  window.cloudShow=(id,b)=>{
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    document.getElementById('p-'+id)?.classList.add('active');
+    document.querySelectorAll('nav button,.cloud-tools button').forEach(x=>x.classList.remove('active'));
+    b?.classList.add('active');
+    if(id==='pesquisa') window.renderLegalSearch?.();
+    else if(typeof render==='function') render(id);
+  };
+
+  function localLooksEmpty(){
+    return !S.started && !(S.answers||[]).length && !(S.sessions||[]).length && !(S.sims||[]).length;
+  }
+
+  async function pullState(){
+    const d=await callApi('pull_state');
+    if(d.state && localLooksEmpty()){
+      S=d.state;
+      if(typeof save==='function') save();
+      if(document.getElementById('p-hoje')?.classList.contains('active') && typeof renderHoje==='function') renderHoje();
+    }
+    return d;
+  }
+
+  async function pushState(){
+    const d=await callApi('push_state',{state:S});
+    MC.lastSync=Date.now();
+    return d;
+  }
+
+  window.cloudLoadQuestions=async()=>{
+    if(!MC.ready)return;
+    try{
+      const d=await callApi('questions');
+      const rows=d.questions||[];
+      const ids=new Set(QUESTIONS.map(q=>q.id));
+      for(const q of rows){
+        if(q.legacy_id==null||ids.has(q.legacy_id)) continue;
+        QUESTIONS.push({id:q.legacy_id,disc:q.disciplines?.name||'Outros',topic:q.topics?.name||'Geral',q:q.prompt,opts:q.options,ans:q.correct_index,exp:q.explanation,diff:q.difficulty||'Médio',ref:q.source_url||'',_cloudId:q.id});
+        ids.add(q.legacy_id);
+      }
+    }catch(e){console.warn('Falha ao carregar questões da nuvem',e)}
+  };
+
+  window.cloudSyncNow=async(show=false)=>{
+    if(!MC.ready||MC.syncing)return;
+    MC.syncing=true;
+    if(show)status('Sincronizando...');
+    try{
+      await pushState();
+      await window.cloudLoadQuestions();
+      MC.lastError=null;
+      status('Salvo na nuvem','good');
+    }catch(e){
+      MC.lastError=e.message||String(e);
+      status('Salvo neste aparelho','warn');
+      console.warn('Falha de sincronização',e);
+    }finally{MC.syncing=false}
+  };
+
+  async function init(){
+    getCreds();
+    if(!cfg.supabaseUrl||!cfg.supabaseKey){status('Dados neste aparelho','warn');return}
+    status('Conectando...');
+    try{
+      await callApi('register');
+      MC.ready=true;
+      await pullState();
+      await pushState();
+      await window.cloudLoadQuestions();
+      status('Salvo na nuvem','good');
+
+      if(typeof window.save==='function'&&!window.save.__cloudWrapped){
+        const original=window.save;
+        const wrapped=function(){
+          original();
+          clearTimeout(MC._timer);
+          MC._timer=setTimeout(()=>window.cloudSyncNow(false),2500);
+        };
+        wrapped.__cloudWrapped=true;
+        window.save=wrapped;
+      }
+      if(document.getElementById('p-pesquisa')?.classList.contains('active')) window.renderLegalSearch?.();
+    }catch(e){
+      MC.lastError=e.message||String(e);
+      status('Dados neste aparelho','warn');
+      console.warn('Nuvem indisponível',e);
+      if(document.getElementById('p-pesquisa')?.classList.contains('active')) window.renderLegalSearch?.();
+    }
+  }
+
+  window.retryCloud=async()=>{MC.ready=false;await init()};
+  window.addEventListener('load',()=>setTimeout(init,250));
 })();
