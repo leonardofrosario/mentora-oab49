@@ -1,0 +1,16 @@
+function renderQuestoes(){
+ let p=document.getElementById('p-questoes');p.innerHTML=`<div class="card"><h1>Banco de questões</h1><p><b>${QUESTIONS.length} questões autorais</b> de demonstração. Não são questões oficiais da FGV.</p><div class="grid3"><div><label>Disciplina</label><select id="qdisc" onchange="listQ()"><option value="">Todas</option>${discs.map(d=>`<option>${d}</option>`).join('')}</select></div><div><label>Filtro</label><select id="qfilter" onchange="listQ()"><option value="">Todas</option><option value="never">Nunca respondidas</option><option value="wrong">Erradas anteriormente</option></select></div><div><label>Busca</label><input id="qsearch" oninput="listQ()" placeholder="Assunto ou palavra"></div></div></div><div id="qlist"></div>`;listQ()
+}
+function listQ(){
+ let d=document.getElementById('qdisc')?.value||'',f=document.getElementById('qfilter')?.value||'',s=(document.getElementById('qsearch')?.value||'').toLowerCase();
+ let qs=QUESTIONS.filter(q=>(!d||q.disc===d)&&(!s||(q.q+' '+q.topic).toLowerCase().includes(s)));
+ if(f==='never')qs=qs.filter(q=>!S.answers.some(a=>a.qid===q.id));if(f==='wrong')qs=qs.filter(q=>S.errors.some(e=>e.qid===q.id));
+ document.getElementById('qlist').innerHTML=qs.slice(0,40).map(q=>`<div class="card question"><div class="row"><span class="pill">${q.disc}</span><span class="muted">${q.topic} • ${q.diff}</span></div><p><b>${q.id}.</b> ${esc(q.q)}</p><button class="btn secondary" onclick="singleQ(${q.id})">Responder</button></div>`).join('')||'<div class="card"><p>Nenhuma questão encontrada.</p></div>'
+}
+function singleQ(id){quiz={ids:[id],i:0,mode:'study',answers:[],started:Date.now()};show('estudar');renderQuiz()}
+function renderRevisoes(){
+ let p=document.getElementById('p-revisoes'), due=dueErrors();
+ p.innerHTML=`<div class="card"><h1>Caderno de erros e revisões</h1><p>Erros voltam em ciclos de 1, 7, 21 e 45 dias. Reincidências retornam mais cedo.</p><div class="row"><button class="btn amber" onclick="reviewNow()" ${!due.length?'disabled':''}>Revisar agora (${due.length})</button><span class="pill">${S.errors.filter(e=>!e.mastered).length} erros ativos</span></div></div><div>${S.errors.filter(e=>!e.mastered).map(e=>{let q=QUESTIONS.find(x=>x.id===e.qid);return `<div class="card question"><b>${e.disc} — ${e.topic}</b><p>${esc(q?.q||'Questão')}</p><div class="row"><span class="pill bad">${e.count} erro(s)</span><span class="muted">Próxima revisão: ${fmtDate(new Date(e.nextReview||Date.now()))}</span><button class="btn secondary" onclick="markMastered(${e.qid})">Marcar dominado</button></div></div>`}).join('')||'<div class="card"><p>Nenhum erro ativo. Continue fazendo questões.</p></div>'}</div>`
+}
+function markMastered(id){let e=S.errors.find(x=>x.qid===id&&!x.mastered);if(e)e.mastered=true;save();renderRevisoes()}
+function reviewNow(){let due=dueErrors();quiz={ids:due.slice(0,15).map(e=>e.qid),i:0,mode:'review',answers:[],started:Date.now()};show('estudar');renderQuiz();due.forEach(e=>{e.stage=Math.min(3,(e.stage||0)+1);let gaps=[1,7,21,45];e.nextReview=Date.now()+gaps[e.stage]*86400000});save()}
