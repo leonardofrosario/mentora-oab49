@@ -1,0 +1,9 @@
+{
+  "name": "Mentora OAB 49",
+  "short_name": "OAB49",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f4ee",
+  "theme_color": "#10243e",
+  "description": "Preparação gratuita para a 1ª fase do 49º Exame de Ordem."
+}
