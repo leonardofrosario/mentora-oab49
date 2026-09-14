@@ -7,6 +7,7 @@
 <title>Mentora OAB 49 • Maranhão</title>
 <link rel="canonical" href="https://leonardofrosario.github.io/mentora-oab49/">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-oab49-ma.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="ui-v6.css">
 <link rel="stylesheet" href="coach-ui.css">
@@ -18,6 +19,7 @@
     <div class="header-right">
       <nav id="nav"></nav>
       <div id="cloud-nav" class="row cloud-tools">
+        <button id="pwa-install-button" hidden onclick="installMentora()">Instalar app</button>
         <button id="nav-pesquisa" onclick="cloudShow('pesquisa',this)">Pesquisa IA</button>
         <span id="cloud-sync-status" class="pill">Conectando...</span>
       </div>
@@ -56,5 +58,6 @@
 <script src="ma-ui.js"></script>
 <script src="coach-ui.js"></script>
 <script src="tutor-controls.js"></script>
+<script src="install-pwa.js"></script>
 </body>
 </html>
