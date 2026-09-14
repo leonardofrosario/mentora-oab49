@@ -1,0 +1,52 @@
+/* Correções de responsividade e sobreposição */
+html,body{max-width:100%;overflow-x:hidden}
+header .bar{flex-wrap:wrap}
+.header-right, .header-right nav, .cloud-tools, .card, .grid2>*, .grid3>*, .hero>*, .kpis>*{min-width:0}
+.card{overflow-wrap:anywhere}
+.table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tutor-grid{grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr)}
+.tutor-chat,.ai-answer,.bubble{overflow-wrap:anywhere;word-break:break-word}
+
+@media(max-width:1180px){
+  header{position:static}
+  header .bar{display:block;padding:12px 16px}
+  .brand{display:block;margin-bottom:10px}
+  .header-right{display:block!important;width:100%!important;max-width:100%}
+  .header-right nav{display:flex;flex-wrap:wrap!important;overflow:visible!important;gap:6px;margin:0 0 8px;padding:0}
+  .header-right nav button{flex:0 0 auto;max-width:100%}
+  .cloud-tools{display:flex;flex-wrap:wrap!important;justify-content:flex-start!important;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid #ffffff18}
+  .cloud-tools .pill{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+}
+
+@media(max-width:1000px){
+  .tutor-grid,.grid2,.hero{grid-template-columns:1fr!important}
+  .performance-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .readiness-box{width:100%}
+}
+
+@media(max-width:760px){
+  .wrap{padding:12px!important}
+  header .bar{padding:10px 12px}
+  .brand{font-size:18px;line-height:1.2}
+  .brand small{margin-top:4px;line-height:1.35}
+  .header-right nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .header-right nav button{width:100%;padding:8px 6px!important;text-align:center;white-space:normal!important;line-height:1.15}
+  .cloud-tools{display:grid!important;grid-template-columns:1fr 1fr;align-items:center}
+  .cloud-tools button{width:100%;white-space:normal!important}
+  .cloud-tools .pill{grid-column:1/-1;text-align:center}
+  .performance-kpis,.mini-kpis,.kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .card{padding:14px}
+  h1{font-size:24px}
+  h2{font-size:20px}
+  .row{max-width:100%}
+  .row>.btn{max-width:100%}
+}
+
+@media(max-width:420px){
+  .header-right nav{grid-template-columns:1fr}
+  .cloud-tools{grid-template-columns:1fr}
+  .cloud-tools .pill{grid-column:auto}
+  .performance-kpis,.mini-kpis,.kpis{grid-template-columns:1fr!important}
+  .card{padding:12px}
+  .btn{width:100%}
+}
