@@ -1,5 +1,5 @@
-const CACHE='mentora-oab49-ma-pwa-icon';
-const ASSETS=['./','./index.html','./styles.css','./ui-v6.css','./coach-ui.css','./manifest.webmanifest','./icon-oab49-ma.svg','./data/questions-1.js','./data/questions-2.js','./data/questions-3.js','./data/questions-4.js','./data/questions-5.js','./data/questions-6.js','./data/questions-7.js','./data/questions-8.js','./app-1.js','./app-2.js','./app-3.js','./app-4.js','./learning-ui.js','./cloud-config.js','./cloud-core.js','./cloud-ai.js','./ma-ui.js','./coach-ui.js','./tutor-controls.js','./install-pwa.js'];
+const CACHE='oab-estudos-responsive-fix';
+const ASSETS=['./','./index.html','./styles.css','./ui-v6.css','./coach-ui.css','./responsive-fix.css','./manifest.webmanifest','./icon-oab49-ma.svg','./data/questions-1.js','./data/questions-2.js','./data/questions-3.js','./data/questions-4.js','./data/questions-5.js','./data/questions-6.js','./data/questions-7.js','./data/questions-8.js','./app-1.js','./app-2.js','./app-3.js','./app-4.js','./learning-ui.js','./cloud-config.js','./cloud-core.js','./cloud-ai.js','./ma-ui.js','./coach-ui.js','./tutor-controls.js','./install-pwa.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
