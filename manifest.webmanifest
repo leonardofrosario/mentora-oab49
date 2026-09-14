@@ -1,9 +1,19 @@
 {
-  "name": "Mentora OAB 49",
-  "short_name": "OAB49",
+  "id": "/mentora-oab49/",
+  "name": "Mentora OAB 49 • Maranhão",
+  "short_name": "OAB 49 MA",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f7f4ee",
   "theme_color": "#10243e",
-  "description": "Preparação gratuita para a 1ª fase do 49º Exame de Ordem."
+  "description": "Preparação independente para a 1ª fase do 49º Exame de Ordem, Seccional Maranhão.",
+  "icons": [
+    {
+      "src": "icon-oab49-ma.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
