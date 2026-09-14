@@ -1,0 +1,1 @@
+PWA icons are managed as app assets.
