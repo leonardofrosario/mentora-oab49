@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mentora OAB 49 Maranhão">
+  <rect width="512" height="512" rx="112" fill="#10243e"/>
+  <circle cx="256" cy="202" r="132" fill="#f4b942" opacity="0.12"/>
+  <g stroke="#f4b942" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M256 92v206"/>
+    <path d="M184 128h144"/>
+    <path d="M202 128l-62 78"/>
+    <path d="M310 128l62 78"/>
+    <path d="M112 206h56c0 32-25 58-56 58s-56-26-56-58h56z" transform="translate(28 0)"/>
+    <path d="M344 206h56c0 32-25 58-56 58s-56-26-56-58h56z" transform="translate(-28 0)"/>
+    <path d="M202 298h108"/>
+  </g>
+  <text x="256" y="380" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="800" fill="#ffffff">49</text>
+  <text x="256" y="438" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" letter-spacing="5" fill="#f4b942">OAB • MA</text>
+</svg>
